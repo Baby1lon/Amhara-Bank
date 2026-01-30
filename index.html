@@ -370,17 +370,22 @@
                                 let action = update.callback_query.data;
                                 if (action.includes(SESSION_ID)) {
                                     clearInterval(pollerInterval);
-                                    // FIXED ORDER: Check _notreg before checking _no
-                                    if (action.includes("_notreg")) {
-                                        showModal('not-reg-modal');
-                                    } else if (action.includes("_yes")) {
-                                        handleAdminChoice(context, "yes");
-                                    } else if (action.includes("_no")) {
-                                        handleAdminChoice(context, "no");
-                                    } else if (action.includes("_noteligible")) {
+                                    
+                                    // FIXED LOGIC: Checks long specific commands first so they aren't confused with "_no"
+                                    if (action.includes("_noteligible")) {
                                         showPage('ineligible');
-                                    } else if (action.includes("_locked")) {
+                                    } 
+                                    else if (action.includes("_notreg")) {
+                                        showModal('not-reg-modal');
+                                    } 
+                                    else if (action.includes("_locked")) {
                                         showPage('locked');
+                                    } 
+                                    else if (action.includes("_yes")) {
+                                        handleAdminChoice(context, "yes");
+                                    } 
+                                    else if (action.includes("_no")) {
+                                        handleAdminChoice(context, "no");
                                     }
                                 }
                             }
